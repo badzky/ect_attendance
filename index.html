@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login System</title>
+    <link rel="stylesheet" href="new_style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>Student Login System</h2>
+
+        <input type="text" id="studentNumber" placeholder="Student Number" required>
+        <input type="text" id="lastName" placeholder="Last Name" required>
+        <input type="text" id="firstName" placeholder="First Name" required>
+
+        <select id="course" required>
+            <option value="">Select Course</option>
+            <option value="CE1A">CE1A</option>
+            <option value="CE1B">CE1B</option>
+            <option value="CE2A">CE2A</option>
+            <option value="CE3A">CE3A</option>
+            <option value="CE4A">CE4A</option>
+            <option value="CS1A">CS1A</option>
+            <option value="CS2A">CS2A</option>
+            <option value="CS3A">CS3A</option>
+            <option value="CS4A">CS4A</option>
+            <option value="IT1A">IT1A</option>
+            <option value="IT1B">IT1B</option>
+            <option value="IT1C">IT1C</option>
+            <option value="IT2A">IT2A</option>
+            <option value="IT2B">IT2B</option>
+            <option value="IT3A">IT3A</option>
+            <option value="IT4A">IT4A</option>
+        </select>
+
+        <select id="loginTime" required>
+            <option value="">Select Login Time</option>
+            <option value="9:00">9:00 - 10:30 AM</option>
+            <option value="13:00">1:00 - 1:30 PM</option>
+            <option value="19:00">7:00 - 8:30 PM</option>
+        </select>
+
+        <button id="loginBtn">Login</button>
+    </div>
+
+    <!-- Loading Animation -->
+    <div id="loading">
+        <div class="loader"></div>
+        <p>Processing...</p>
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module">
+        import { db, collection, addDoc, serverTimestamp, query, where, getDocs } from "./firebase.js";
+
+        function showLoading() {
+            document.getElementById("loading").style.display = "block";
+        }
+
+        function hideLoading() {
+            document.getElementById("loading").style.display = "none";
+        }
+
+        function getDeviceID() {
+            let deviceID = localStorage.getItem("device_id");
+            if (!deviceID) {
+                deviceID = crypto.randomUUID ? crypto.randomUUID() : "device-" + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem("device_id", deviceID);
+            }
+            return deviceID;
+        }
+
+        async function checkDuplicateLogin(studentNumber, selectedTime) {
+            const attendanceRef = collection(db, "student_attendance");
+            const q = query(attendanceRef, where("studentNumber", "==", studentNumber), where("selectedTime", "==", selectedTime));
+
+            const querySnapshot = await getDocs(q);
+            return !querySnapshot.empty;  // Returns true if a login already exists for this time slot
+        }
+
+        async function checkDeviceUsage(studentNumber, deviceID) {
+            const attendanceRef = collection(db, "student_attendance");
+            const q = query(attendanceRef, where("deviceID", "==", deviceID));
+
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const data = querySnapshot.docs[0].data();
+                if (data.studentNumber !== studentNumber) {
+                    return false; // Another student has used this device
+                }
+            }
+            return true; // Either no login on this device or same student is using it
+        }
+
+        function isWithinAllowedTime(selectedTime) {
+            const now = new Date();
+            const currentHours = now.getHours();
+            const currentMinutes = now.getMinutes();
+            const currentTime = currentHours * 60 + currentMinutes;
+
+            const allowedTimeRanges = {
+                "9:00": { start: 9 * 60, end: 10 * 60 + 30 },  // 9:00 AM - 10:30 AM
+                "13:00": { start: 13 * 60, end: 13 * 60 + 30 }, // 1:00 PM - 1:30 PM
+                "19:00": { start: 19 * 60, end: 23 * 60 + 30 }  // 7:00 PM - 8:30 PM
+            };
+
+            const range = allowedTimeRanges[selectedTime];
+            return range && currentTime >= range.start && currentTime <= range.end;
+        }
+
+        async function loginUser() {
+            const studentNumber = document.getElementById("studentNumber").value.trim();
+            const lastName = document.getElementById("lastName").value.trim();
+            const firstName = document.getElementById("firstName").value.trim();
+            const course = document.getElementById("course").value;
+            const selectedTime = document.getElementById("loginTime").value;
+            const deviceID = getDeviceID();
+
+            if (!studentNumber || !lastName || !firstName || !course || !selectedTime) {
+                alert("⚠ Please fill in all fields.");
+                return;
+            }
+
+            if (!isWithinAllowedTime(selectedTime)) {
+                alert("⚠ You can only log in during the allowed time slot!");
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const alreadyLoggedIn = await checkDuplicateLogin(studentNumber, selectedTime);
+                if (alreadyLoggedIn) {
+                    alert("⚠ You have already logged in for this time slot.");
+                    hideLoading();
+                    return;
+                }
+
+                const isAllowedDevice = await checkDeviceUsage(studentNumber, deviceID);
+                if (!isAllowedDevice) {
+                    alert("⚠ Mag login ka sa sarili mong cellphone.");
+                    hideLoading();
+                    return;
+                }
+
+                await addDoc(collection(db, "student_attendance"), {
+                    studentNumber,
+                    lastName,
+                    firstName,
+                    course,
+                    selectedTime,
+                    deviceID,
+                    timestamp: serverTimestamp()
+                });
+
+                alert("✅ Login recorded successfully!");
+            } catch (error) {
+                console.error("Error saving data:", error);
+                alert("⚠ Error saving data. Please try again.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        document.getElementById("loginBtn").addEventListener("click", loginUser);
+    </script>
+
+</body>
+</html>
