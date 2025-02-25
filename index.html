@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login System</title>
     <link rel="stylesheet" href="new_style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 
@@ -42,11 +43,15 @@
             <option value="19:00">7:00 - 8:30 PM</option>
         </select>
 
+        <!-- Hidden Fields for Barangay and City -->
+        <input type="hidden" id="barangay" name="barangay">
+        <input type="hidden" id="city" name="city">
+
         <button id="loginBtn">Login</button>
     </div>
 
     <!-- Loading Animation -->
-    <div id="loading">
+    <div id="loading" style="display: none;">
         <div class="loader"></div>
         <p>Processing...</p>
     </div>
@@ -54,15 +59,15 @@
     <script type="module" src="firebase.js"></script>
     <script type="module">
         import { db, collection, addDoc, serverTimestamp, query, where, getDocs } from "./firebase.js";
-
+    
         function showLoading() {
-            document.getElementById("loading").style.display = "block";
+            $("#loading").show();
         }
-
+    
         function hideLoading() {
-            document.getElementById("loading").style.display = "none";
+            $("#loading").hide();
         }
-
+    
         function getDeviceID() {
             let deviceID = localStorage.getItem("device_id");
             if (!deviceID) {
@@ -71,66 +76,68 @@
             }
             return deviceID;
         }
-
+    
         async function checkDuplicateLogin(studentNumber, selectedTime) {
             const attendanceRef = collection(db, "student_attendance");
             const q = query(attendanceRef, where("studentNumber", "==", studentNumber), where("selectedTime", "==", selectedTime));
-
+    
             const querySnapshot = await getDocs(q);
-            return !querySnapshot.empty;  // Returns true if a login already exists for this time slot
+            return !querySnapshot.empty;
         }
-
+    
         async function checkDeviceUsage(studentNumber, deviceID) {
             const attendanceRef = collection(db, "student_attendance");
             const q = query(attendanceRef, where("deviceID", "==", deviceID));
-
+    
             const querySnapshot = await getDocs(q);
-
+    
             if (!querySnapshot.empty) {
                 const data = querySnapshot.docs[0].data();
                 if (data.studentNumber !== studentNumber) {
-                    return false; // Another student has used this device
+                    return false;
                 }
             }
-            return true; // Either no login on this device or same student is using it
+            return true;
         }
-
+    
         function isWithinAllowedTime(selectedTime) {
             const now = new Date();
             const currentHours = now.getHours();
             const currentMinutes = now.getMinutes();
             const currentTime = currentHours * 60 + currentMinutes;
-
+    
             const allowedTimeRanges = {
-                "9:00": { start: 9 * 60, end: 10 * 60 + 30 },  // 9:00 AM - 10:30 AM
-                "13:00": { start: 13 * 60, end: 13 * 60 + 30 }, // 1:00 PM - 1:30 PM
-                "19:00": { start: 19 * 60, end: 23 * 60 + 30 }  // 7:00 PM - 8:30 PM
+                "9:00": { start: 9 * 60, end: 10 * 60 + 30 },
+                "13:00": { start: 13 * 60, end: 13 * 60 + 30 },
+                "19:00": { start: 19 * 60, end: 20 * 60 + 30 }
             };
-
+    
             const range = allowedTimeRanges[selectedTime];
             return range && currentTime >= range.start && currentTime <= range.end;
         }
-
+    
         async function loginUser() {
-            const studentNumber = document.getElementById("studentNumber").value.trim();
-            const lastName = document.getElementById("lastName").value.trim();
-            const firstName = document.getElementById("firstName").value.trim();
-            const course = document.getElementById("course").value;
-            const selectedTime = document.getElementById("loginTime").value;
+            const studentNumber = $("#studentNumber").val().trim();
+            const lastName = $("#lastName").val().trim();
+            const firstName = $("#firstName").val().trim();
+            const course = $("#course").val();
+            const selectedTime = $("#loginTime").val();
+            const barangay = $("#barangay").val();
+            const city = $("#city").val();
             const deviceID = getDeviceID();
-
-            if (!studentNumber || !lastName || !firstName || !course || !selectedTime) {
+    
+            if (!studentNumber || !lastName || !firstName || !course || !selectedTime || !barangay || !city) {
                 alert("⚠ Please fill in all fields.");
                 return;
             }
-
+    
             if (!isWithinAllowedTime(selectedTime)) {
                 alert("⚠ You can only log in during the allowed time slot!");
                 return;
             }
-
+    
             showLoading();
-
+    
             try {
                 const alreadyLoggedIn = await checkDuplicateLogin(studentNumber, selectedTime);
                 if (alreadyLoggedIn) {
@@ -138,25 +145,37 @@
                     hideLoading();
                     return;
                 }
-
+    
                 const isAllowedDevice = await checkDeviceUsage(studentNumber, deviceID);
                 if (!isAllowedDevice) {
                     alert("⚠ Mag login ka sa sarili mong cellphone.");
                     hideLoading();
                     return;
                 }
-
+    
                 await addDoc(collection(db, "student_attendance"), {
                     studentNumber,
                     lastName,
                     firstName,
                     course,
                     selectedTime,
+                    barangay,
+                    city,
                     deviceID,
                     timestamp: serverTimestamp()
                 });
-
+    
                 alert("✅ Login recorded successfully!");
+    
+                // 🔹 CLEAR INPUT FIELDS AFTER SUCCESSFUL SUBMISSION
+                $("#studentNumber").val("");
+                $("#lastName").val("");
+                $("#firstName").val("");
+                $("#course").prop("selectedIndex", 0);
+                $("#loginTime").prop("selectedIndex", 0);
+                $("#barangay").val("");
+                $("#city").val("");
+    
             } catch (error) {
                 console.error("Error saving data:", error);
                 alert("⚠ Error saving data. Please try again.");
@@ -164,9 +183,53 @@
                 hideLoading();
             }
         }
-
-        document.getElementById("loginBtn").addEventListener("click", loginUser);
+    
+        function getLocation() {
+            if (!navigator.geolocation) {
+                alert("⚠ Geolocation is not supported by your browser.");
+                return;
+            }
+    
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    let latitude = position.coords.latitude;
+                    let longitude = position.coords.longitude;
+    
+                    let apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+    
+                    $.ajax({
+                        url: apiUrl,
+                        method: "GET",
+                        success: function (data) {
+                            if (data.address) {
+                                let barangay = data.address.suburb || data.address.village || data.address.hamlet || "Not Found";
+                                let city = data.address.city || data.address.town || data.address.municipality || "Not Found";
+    
+                                $("#barangay").val(barangay);
+                                $("#city").val(city);
+                            } else {
+                                $("#barangay").val("Not Found");
+                                $("#city").val("Not Found");
+                            }
+                        },
+                        error: function () {
+                            $("#barangay").val("Not Found");
+                            $("#city").val("Not Found");
+                        }
+                    });
+                },
+                function () {
+                    alert("⚠ Location access denied.");
+                }
+            );
+        }
+    
+        $(document).ready(function () {
+            getLocation();
+            $("#loginBtn").click(loginUser);
+        });
     </script>
+    
 
 </body>
 </html>
