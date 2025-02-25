@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Login System</title>
+    <title>Student Attendance System</title>
     <link rel="stylesheet" href="new_style.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-
+    <div class="logo">
+        <img src="LOGO.jpg" alt="Logo">
+        <div class="department">ECT DEPARTMENT</div>
+    </div>
     <div class="container">
-        <h2>Student Login System</h2>
+        <h2>Student Attendance System</h2>
 
         <input type="text" id="studentNumber" placeholder="Student Number" required>
         <input type="text" id="lastName" placeholder="Last Name" required>
@@ -55,7 +58,9 @@
         <div class="loader"></div>
         <p>Processing...</p>
     </div>
-
+    <footer class="footer">
+        Powered by: <span class="faculty-name">VBadua ECT FACULTY</span>
+    </footer>
     <script type="module" src="firebase.js"></script>
     <script type="module">
         import { db, collection, addDoc, serverTimestamp, query, where, getDocs } from "./firebase.js";
