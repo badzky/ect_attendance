@@ -8,6 +8,27 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
+
+<!-- Modal -->
+  <div id="instructionModal" class="modal">
+    <div class="modal-content">
+        <h2>📌 Instructions</h2>
+        <p>Welcome to the <strong>Student Attendance System</strong>. Please follow these steps carefully:</p>
+        <ol>
+            <li><strong>Enter your details:</strong> Provide your <em>Student Number</em>, <em>First Name</em>, and <em>Last Name</em> correctly.</li>
+            <li><strong>Select your course:</strong> Choose your <em>Course</em> from the dropdown menu.</li>
+            <li><strong>Pick your login time:</strong> Select the <em>designated time slot</em> for attendance.</li>
+            <li><strong>Enable location services:</strong> Ensure your <em>GPS is turned on</em> for verification.</li>
+            <li><strong>Click "Login":</strong> Press the <em>Login</em> button to submit your attendance.</li>
+        </ol>
+        <p><strong>⚠ Important:</strong> You can only log in during the allowed time slots. Multiple logins may be restricted.</p>
+        <button id="closeModal">Got It!</button>
+    </div>
+</div>
+
+
+
+    
     <div class="logo">
         <img src="LOGO.jpg" alt="Logo">
         <div class="department">ECT DEPARTMENT</div>
@@ -234,7 +255,25 @@
             $("#loginBtn").click(loginUser);
         });
     </script>
-    
+
+
+
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const modal = document.getElementById("instructionModal");
+            const closeModal = document.getElementById("closeModal");
+
+            // Show the modal when the page loads
+            modal.style.display = "flex";
+
+            // Close the modal when clicking the button
+            closeModal.addEventListener("click", function () {
+                modal.style.display = "none";
+            });
+        });
+    </script>
 
 </body>
 </html>
