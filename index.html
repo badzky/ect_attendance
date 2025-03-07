@@ -210,8 +210,7 @@
             }
         }
     
-    
-     function getLocation() {
+    function getLocation() {
     if (!navigator.geolocation) {
         alert("⚠ Geolocation is not supported by your browser.");
         return;
@@ -222,22 +221,22 @@
             let latitude = position.coords.latitude;
             let longitude = position.coords.longitude;
 
-            // Debugging: Log latitude and longitude
             console.log("Latitude:", latitude);
             console.log("Longitude:", longitude);
 
-            // Check if latitude and longitude are valid numbers
             if (isNaN(latitude) || isNaN(longitude)) {
                 alert("⚠ Invalid coordinates received.");
                 return;
             }
 
-            let apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+            let apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`;
 
             $.ajax({
                 url: apiUrl,
                 method: "GET",
                 success: function (data) {
+                    console.log("Nominatim Response:", data); // Log the full response
+
                     if (data.address) {
                         let barangay = data.address.suburb || data.address.village || data.address.hamlet || "Not Found";
                         let city = data.address.city || data.address.town || data.address.municipality || "Not Found";
@@ -285,10 +284,6 @@ $(document).ready(function () {
     getLocation();
     $("#loginBtn").click(loginUser );
 });
-
-
-
-
 
         document.addEventListener("DOMContentLoaded", function () {
             const modal = document.getElementById("instructionModal");
