@@ -210,50 +210,76 @@
             }
         }
     
+    
+
         function getLocation() {
-            if (!navigator.geolocation) {
-                alert("⚠ Geolocation is not supported by your browser.");
-                return;
-            }
-    
-            navigator.geolocation.getCurrentPosition(
-                function (position) {
-                    let latitude = position.coords.latitude;
-                    let longitude = position.coords.longitude;
-    
-                    let apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-    
-                    $.ajax({
-                        url: apiUrl,
-                        method: "GET",
-                        success: function (data) {
-                            if (data.address) {
-                                let barangay = data.address.suburb || data.address.village || data.address.hamlet || "Not Found";
-                                let city = data.address.city || data.address.town || data.address.municipality || "Not Found";
-    
-                                $("#barangay").val(barangay);
-                                $("#city").val(city);
-                            } else {
-                                $("#barangay").val("Not Found");
-                                $("#city").val("Not Found");
-                            }
-                        },
-                        error: function () {
-                            $("#barangay").val("Not Found");
-                            $("#city").val("Not Found");
+    if (!navigator.geolocation) {
+        alert("⚠ Geolocation is not supported by your browser.");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function (position) {
+            let latitude = position.coords.latitude;
+            let longitude = position.coords.longitude;
+
+            let apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+
+            $.ajax({
+                url: apiUrl,
+                method: "GET",
+                success: function (data) {
+                    if (data.address) {
+                        let barangay = data.address.suburb || data.address.village || data.address.hamlet || "Not Found";
+                        let city = data.address.city || data.address.town || data.address.municipality || "Not Found";
+
+                        if (barangay === "Not Found") {
+                            console.log("Barangay not found in Nominatim response.");
                         }
-                    });
+                        if (city === "Not Found") {
+                            console.log("City not found in Nominatim response.");
+                        }
+
+                        $("#barangay").val(barangay);
+                        $("#city").val(city);
+                    } else {
+                        $("#barangay").val("Not Found");
+                        $("#city").val("Not Found");
+                    }
                 },
-                function () {
-                    alert("⚠ Location access denied.");
+                error: function (xhr, status, error) {
+                    console.log("Error fetching location data: " + error);
+                    $("#barangay").val("Not Found");
+                    $("#city").val("Not Found");
                 }
-            );
+            });
+        },
+        function (error) {
+            switch (error.code) {
+                case 1:
+                    alert("⚠ Location access denied.");
+                    break;
+                case 2:
+                    alert("⚠ Unable to retrieve your location.");
+                    break;
+                case 3:
+                    alert("⚠ The request to get user location timed out.");
+                    break;
+                default:
+                    alert("⚠ An unknown error occurred while retrieving your location.");
+            }
         }
-    
-        $(document).ready(function () {
-            getLocation();
-            $("#loginBtn").click(loginUser);
-        });
+    );
+}
+
+$(document).ready(function () {
+    getLocation();
+    $("#loginBtn").click(loginUser);
+});
+
+
+
+
     </script>
 
 
