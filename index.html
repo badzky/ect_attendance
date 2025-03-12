@@ -54,25 +54,16 @@
             <option value="IT1A">IT1A</option>
             <option value="IT1B">IT1B</option>
             <option value="IT1C">IT1C</option>
-            <option value="IT1C">IT1D</option>
             <option value="IT2A">IT2A</option>
             <option value="IT2B">IT2B</option>
-              <option value="IT2B">IT2C</option>
             <option value="IT3A">IT3A</option>
             <option value="IT4A">IT4A</option>
-             <option value="IT4A">EN1A</option>
-             <option value="IT4A">EN1B</option>
-             <option value="IT4A">EN2A</option>
-             <option value="IT4A">EN2B</option>
-             <option value="IT4A">EN3A</option>
-             <option value="IT4A">EN4A</option>
-            
         </select>
 
         <select id="loginTime" required>
             <option value="">Select Login Time</option>
             <option value="9:00">9:00 - 10:30 AM</option>
-            <option value="13:00">1:00 - 2:30 PM</option>
+            <option value="13:00">1:00 - 1:30 PM</option>
             <option value="19:00">7:00 - 8:30 PM</option>
         </select>
 
@@ -143,7 +134,7 @@
     
             const allowedTimeRanges = {
                 "9:00": { start: 9 * 60, end: 10 * 60 + 30 },
-                "13:00": { start: 13 * 60, end: 14 * 60 + 30 },
+                "13:00": { start: 13 * 60, end: 15 * 60 + 30 },
                 "19:00": { start: 19 * 60, end: 20 * 60 + 30 }
             };
     
@@ -219,7 +210,10 @@
             }
         }
     
-    function getLocation() {
+
+
+
+        function getLocation() {
     if (!navigator.geolocation) {
         alert("⚠ Geolocation is not supported by your browser.");
         return;
@@ -240,60 +234,64 @@
 
             let apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`;
 
-            $.ajax({
-                url: apiUrl,
-                method: "GET",
-                success: function (data) {
-                    console.log("Nominatim Response:", data); // Log the full response
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Nominatim Response:", data); // Log full response
 
                     if (data.address) {
-                        let barangay = data.address.suburb || data.address.village || data.address.hamlet || "Not Found";
-                        let city = data.address.city || data.address.town || data.address.municipality || "Not Found";
+                        // More detailed address hierarchy
+                        let barangay = data.address.neighbourhood || data.address.suburb || 
+                                       data.address.village || data.address.hamlet || "Not Found";
 
-                        if (barangay === "Not Found") {
-                            console.log("Barangay not found in Nominatim response.");
-                        }
-                        if (city === "Not Found") {
-                            console.log("City not found in Nominatim response.");
-                        }
+                        let city = data.address.city || data.address.town || 
+                                   data.address.municipality || "Not Found";
 
-                        $("#barangay").val(barangay);
-                        $("#city").val(city);
+                        // Use jQuery if elements exist
+                        if ($("#barangay").length) $("#barangay").val(barangay);
+                        if ($("#city").length) $("#city").val(city);
+
+                        console.log("Barangay:", barangay);
+                        console.log("City:", city);
                     } else {
-                        $("#barangay").val("Not Found");
-                        $("#city").val("Not Found");
+                        console.log("⚠ Address data not found.");
+                        if ($("#barangay").length) $("#barangay").val("Not Found");
+                        if ($("#city").length) $("#city").val("Not Found");
                     }
-                },
-                error: function (xhr, status, error) {
-                    console.log("Error fetching location data: " + error);
-                    $("#barangay").val("Not Found");
-                    $("#city").val("Not Found");
-                }
-            });
+                })
+                .catch(error => {
+                    console.log("Error fetching location data:", error);
+                    if ($("#barangay").length) $("#barangay").val("Not Found");
+                    if ($("#city").length) $("#city").val("Not Found");
+                });
         },
         function (error) {
+            let errorMsg;
             switch (error.code) {
                 case 1:
-                    alert("⚠ Location access denied.");
+                    errorMsg = "⚠ Location access denied by user.";
                     break;
                 case 2:
-                    alert("⚠ Unable to retrieve your location.");
+                    errorMsg = "⚠ Unable to retrieve your location.";
                     break;
                 case 3:
-                    alert("⚠ The request to get user location timed out.");
+                    errorMsg = "⚠ The request to get user location timed out.";
                     break;
                 default:
-                    alert("⚠ An unknown error occurred while retrieving your location.");
+                    errorMsg = "⚠ An unknown error occurred while retrieving your location.";
             }
-        }
+            alert(errorMsg);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // Increased timeout for better accuracy
     );
 }
 
 $(document).ready(function () {
     getLocation();
-    $("#loginBtn").click(loginUser );
+    $("#loginBtn").click(loginUser);
 });
 
+  
         document.addEventListener("DOMContentLoaded", function () {
             const modal = document.getElementById("instructionModal");
             const closeModal = document.getElementById("closeModal");
