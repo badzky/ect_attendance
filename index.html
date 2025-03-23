@@ -54,17 +54,23 @@
             <option value="IT1A">IT1A</option>
             <option value="IT1B">IT1B</option>
             <option value="IT1C">IT1C</option>
+            <option value="IT1D">IT1D</option>
             <option value="IT2A">IT2A</option>
             <option value="IT2B">IT2B</option>
+            <option value="IT2C">IT2C</option>
             <option value="IT3A">IT3A</option>
             <option value="IT4A">IT4A</option>
+             <option value="IRREG-BSIT">IRREG-BSIT</option>
+            <option value="IRREG-BSCS">IRREG-BSCS</option>
+            <option value="IRREG-BSELE">IRREG-BSELE</option>
+            <option value="IRREG-BSCOE">IRREG-BSCOE</option>
         </select>
 
         <select id="loginTime" required>
             <option value="">Select Login Time</option>
-            <option value="9:00">9:00 - 10:30 AM</option>
-            <option value="13:00">1:00 - 5:30 PM</option>
-            <option value="19:00">7:00 - 8:30 PM</option>
+            <option value="9:00-10:30">9:00 - 10:30 AM</option>
+            <option value="1:00-2:30">1:00 - 2:30 PM</option>
+            <option value="7:00-8:30">7:00 - 8:30 PM</option>
         </select>
 
         <!-- Hidden Fields for Barangay and City -->
@@ -134,7 +140,7 @@
     
             const allowedTimeRanges = {
                 "9:00": { start: 9 * 60, end: 10 * 60 + 30 },
-                "13:00": { start: 13 * 60, end: 17 * 60 + 30 },
+                "13:00": { start: 13 * 60, end: 14 * 60 + 30 },
                 "19:00": { start: 19 * 60, end: 20 * 60 + 30 }
             };
     
