@@ -10,7 +10,7 @@
 <body>
 
 <!-- Modal -->
-  <div id="instructionModal" class="modal">
+<div id="instructionModal" class="modal">
     <div class="modal-content">
         <h2>📌 Instructions</h2>
         <p>Welcome to the <strong>Student Attendance System</strong>. Please follow these steps carefully:</p>
@@ -26,297 +26,302 @@
     </div>
 </div>
 
+<div class="logo">
+    <img src="LOGO.jpg" alt="Logo">
+    <div class="department">ECT DEPARTMENT</div>
+</div>
+<div class="container">
+    <h2>Student Attendance System</h2>
 
+    <input type="text" id="studentNumber" placeholder="Student Number" required>
+    <input type="text" id="lastName" placeholder="Last Name" required>
+    <input type="text" id="firstName" placeholder="First Name" required>
 
-    
-    <div class="logo">
-        <img src="LOGO.jpg" alt="Logo">
-        <div class="department">ECT DEPARTMENT</div>
-    </div>
-    <div class="container">
-        <h2>Student Attendance System</h2>
+    <select id="course" required>
+        <option value="">Select Course</option>
+        <option value="CE1A">CE1A</option>
+        <option value="CE1B">CE1B</option>
+        <option value="CE2A">CE2A</option>
+        <option value="CE3A">CE3A</option>
+        <option value="CE4A">CE4A</option>
+        <option value="CS1A">CS1A</option>
+        <option value="CS2A">CS2A</option>
+        <option value="CS3A">CS3A</option>
+        <option value="CS4A">CS4A</option>
+        <option value="IT1A">IT1A</option>
+        <option value="IT1B">IT1B</option>
+        <option value="IT1C">IT1C</option>
+        <option value="IT1D">IT1D</option>
+        <option value="IT2A">IT2A</option>
+        <option value="IT2B">IT2B</option>
+        <option value="IT2C">IT2C</option>
+        <option value="IT3A">IT3A</option>
+        <option value="IT4A">IT4A</option>
+        <option value="EN1A">EN1A</option>
+        <option value="EN1B">EN1B</option>
+        <option value="EN2A">EN2A</option>
+        <option value="EN2B">EN2B</option>
+        <option value="EN3A">EN3A</option>
+        <option value="EN4A">EN4A</option>
+        <option value="IRREG-BSIT">IRREG-BSIT</option>
+        <option value="IRREG-BSCS">IRREG-BSCS</option>
+        <option value="IRREG-BSELE">IRREG-BSELE</option>
+        <option value="IRREG-BSCOE">IRREG-BSCOE</option>
+    </select>
 
-        <input type="text" id="studentNumber" placeholder="Student Number" required>
-        <input type="text" id="lastName" placeholder="Last Name" required>
-        <input type="text" id="firstName" placeholder="First Name" required>
+    <select id="loginTime" required>
+        <option value="">Select Login Time</option>
+    </select>
 
-        <select id="course" required>
-            <option value="">Select Course</option>
-            <option value="CE1A">CE1A</option>
-            <option value="CE1B">CE1B</option>
-            <option value="CE2A">CE2A</option>
-            <option value="CE3A">CE3A</option>
-            <option value="CE4A">CE4A</option>
-            <option value="CS1A">CS1A</option>
-            <option value="CS2A">CS2A</option>
-            <option value="CS3A">CS3A</option>
-            <option value="CS4A">CS4A</option>
-            <option value="IT1A">IT1A</option>
-            <option value="IT1B">IT1B</option>
-            <option value="IT1C">IT1C</option>
-            <option value="IT1D">IT1D</option>
-            <option value="IT2A">IT2A</option>
-            <option value="IT2B">IT2B</option>
-            <option value="IT2C">IT2C</option>
-            <option value="IT3A">IT3A</option>
-            <option value="IT4A">IT4A</option>
-            <option value="EN1A">EN1A</option>
-            <option value="EN1B">EN1B</option>
-            <option value="EN2A">EN2A</option>
-            <option value="EN2B">EN2B</option>
-            <option value="EN3A">EN3A</option>
-            <option value="EN4A">EN4A</option>
-             <option value="IRREG-BSIT">IRREG-BSIT</option>
-            <option value="IRREG-BSCS">IRREG-BSCS</option>
-            <option value="IRREG-BSELE">IRREG-BSELE</option>
-            <option value="IRREG-BSCOE">IRREG-BSCOE</option>
-        </select>
+    <input type="hidden" id="barangay" name="barangay">
+    <input type="hidden" id="city" name="city">
 
-        <select id="loginTime" required>
-            <option value="">Select Login Time</option>
-            <option value="22:00">10:00 - 11:00 PM</option>
-           
-            
-        </select>
+    <button id="loginBtn">Login</button>
+</div>
 
-        <!-- Hidden Fields for Barangay and City -->
-        <input type="hidden" id="barangay" name="barangay">
-        <input type="hidden" id="city" name="city">
+<div id="loading" style="display: none;">
+    <div class="loader"></div>
+    <p>Processing...</p>
+</div>
 
-        <button id="loginBtn">Login</button>
-    </div>
+<footer class="footer">
+    Powered by: <span class="faculty-name">VBadua ECT FACULTY</span>
+</footer>
 
-    <!-- Loading Animation -->
-    <div id="loading" style="display: none;">
-        <div class="loader"></div>
-        <p>Processing...</p>
-    </div>
-    <footer class="footer">
-        Powered by: <span class="faculty-name">VBadua ECT FACULTY</span>
-    </footer>
-    <script type="module" src="firebase.js"></script>
-    <script type="module">
-        import { db, collection, addDoc, serverTimestamp, query, where, getDocs } from "./firebase.js";
-    
-        function showLoading() {
-            $("#loading").show();
-        }
-    
-        function hideLoading() {
-            $("#loading").hide();
-        }
-    
-        function getDeviceID() {
-            let deviceID = localStorage.getItem("device_id");
-            if (!deviceID) {
-                deviceID = crypto.randomUUID ? crypto.randomUUID() : "device-" + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem("device_id", deviceID);
-            }
-            return deviceID;
-        }
-    
-        async function checkDuplicateLogin(studentNumber, selectedTime) {
-            const attendanceRef = collection(db, "student_attendance");
-            const q = query(attendanceRef, where("studentNumber", "==", studentNumber), where("selectedTime", "==", selectedTime));
-    
-            const querySnapshot = await getDocs(q);
-            return !querySnapshot.empty;
-        }
-    
-        async function checkDeviceUsage(studentNumber, deviceID) {
-            const attendanceRef = collection(db, "student_attendance");
-            const q = query(attendanceRef, where("deviceID", "==", deviceID));
-    
-            const querySnapshot = await getDocs(q);
-    
-            if (!querySnapshot.empty) {
-                const data = querySnapshot.docs[0].data();
-                if (data.studentNumber !== studentNumber) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    
-        function isWithinAllowedTime(selectedTime) {
-            const now = new Date();
-            const currentHours = now.getHours();
-            const currentMinutes = now.getMinutes();
-            const currentTime = currentHours * 60 + currentMinutes;
-    
-            const allowedTimeRanges = {
-            
-                "22:00": { start: 22 * 60 , end: 23 * 60 }
-                
-            };
-    
-            const range = allowedTimeRanges[selectedTime];
-            return range && currentTime >= range.start && currentTime <= range.end;
-        }
-    
-        async function loginUser() {
-            const studentNumber = $("#studentNumber").val().trim();
-            const lastName = $("#lastName").val().trim();
-            const firstName = $("#firstName").val().trim();
-            const course = $("#course").val();
-            const selectedTime = $("#loginTime").val();
-            const barangay = $("#barangay").val();
-            const city = $("#city").val();
-            const deviceID = getDeviceID();
-    
-            if (!studentNumber || !lastName || !firstName || !course || !selectedTime || !barangay || !city) {
-                alert("⚠ Please fill in all fields or check your location if it is open!");
-                return;
-            }
-    
-            if (!isWithinAllowedTime(selectedTime)) {
-                alert("⚠ You can only log in during the allowed time slot!");
-                return;
-            }
-    
-            showLoading();
-    
-            try {
-                const alreadyLoggedIn = await checkDuplicateLogin(studentNumber, selectedTime);
-                if (alreadyLoggedIn) {
-                    alert("⚠ You have already logged in for this time slot.");
-                    hideLoading();
-                    return;
-                }
-    
-                const isAllowedDevice = await checkDeviceUsage(studentNumber, deviceID);
-                if (!isAllowedDevice) {
-                    alert("⚠ Mag login ka sa sarili mong cellphone.");
-                    hideLoading();
-                    return;
-                }
-    
-                await addDoc(collection(db, "student_attendance"), {
-                    studentNumber,
-                    lastName,
-                    firstName,
-                    course,
-                    selectedTime,
-                    barangay,
-                    city,
-                    deviceID,
-                    timestamp: serverTimestamp()
+<script type="module" src="firebase.js"></script>
+<script type="module">
+import { 
+    db, collection, addDoc, serverTimestamp, query, where, getDocs, doc, getDoc 
+} from "./firebase.js";
+
+// Loading indicators
+function showLoading() { $("#loading").show(); }
+function hideLoading() { $("#loading").hide(); }
+
+// Generate or get persistent device ID
+function getDeviceID() {
+    let deviceID = localStorage.getItem("deviceID");
+    if (!deviceID) {
+        deviceID = crypto.randomUUID ? crypto.randomUUID() : "device-" + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem("deviceID", deviceID);
+    }
+    return deviceID;
+}
+
+// Load login times into dropdown
+async function loadLoginTimes() {
+    const dropdown = $("#loginTime");
+    dropdown.empty().append(`<option value="">Select Login Time</option>`);
+    try {
+        const settingsDocRef = doc(db, "settings", "attendanceWindows");
+        const snapshot = await getDoc(settingsDocRef);
+        if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (Array.isArray(data.slots)) {
+                data.slots.forEach(slot => {
+                    if (slot.start && slot.end) {
+                        const label = `${slot.start} - ${slot.end}`;
+                        dropdown.append(`<option value="${slot.start}">${label}</option>`);
+                    }
                 });
-    
-                alert("✅ Login recorded successfully!");
-    
-                // 🔹 CLEAR INPUT FIELDS AFTER SUCCESSFUL SUBMISSION
-                $("#studentNumber").val("");
-                $("#lastName").val("");
-                $("#firstName").val("");
-                $("#course").prop("selectedIndex", 0);
-                $("#loginTime").prop("selectedIndex", 0);
-                $("#barangay").val("");
-                $("#city").val("");
-    
-            } catch (error) {
-                console.error("Error saving data:", error);
-                alert("⚠ Error saving data. Please try again.");
-            } finally {
-                hideLoading();
+            }
+        } else {
+            console.warn("⚠ No attendance windows found in Firestore.");
+        }
+    } catch (error) {
+        console.error("Error loading login times:", error);
+    }
+}
+
+// Check if current time is within allowed slot
+async function isWithinAllowedTime(selectedTime) {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const normalizedSelected = selectedTime.trim().padStart(5, "0");
+
+    try {
+        const settingsDocRef = doc(db, "settings", "attendanceWindows");
+        const snapshot = await getDoc(settingsDocRef);
+        if (snapshot.exists()) {
+            const data = snapshot.data();
+            if (Array.isArray(data.slots)) {
+                for (const slot of data.slots) {
+                    if (slot.start && slot.end) {
+                        const start = slot.start.trim().padStart(5, "0");
+                        const end = slot.end.trim().padStart(5, "0");
+                        if (start === normalizedSelected) {
+                            const [startHour, startMinute] = start.split(":").map(Number);
+                            const [endHour, endMinute] = end.split(":").map(Number);
+                            const startMinutes = startHour * 60 + startMinute;
+                            const endMinutes = endHour * 60 + endMinute;
+                            if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) return true;
+                        }
+                    }
+                }
             }
         }
-    
+    } catch (error) {
+        console.error("Error checking time slot:", error);
+    }
+    return false;
+}
 
+// Check if student already logged in for this time
+async function checkDuplicateLogin(studentNumber, selectedTime) {
+    const q = query(
+        collection(db, "student_attendance"),
+        where("studentNumber", "==", studentNumber),
+        where("selectedTime", "==", selectedTime)
+    );
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+}
 
+// Check if device is unique for the student
+async function checkDeviceUsage(studentNumber, deviceID) {
+    const q = query(collection(db, "student_attendance"), where("studentNumber", "==", studentNumber));
+    const snapshot = await getDocs(q);
+    for (const doc of snapshot.docs) {
+        if (doc.data().deviceID !== deviceID) return false;
+    }
+    return true;
+}
 
-        function getLocation() {
+// Prefill location on page load
+function prefillLocation() {
     if (!navigator.geolocation) {
-        alert("⚠ Geolocation is not supported by your browser.");
+        console.warn("⚠ Geolocation is not supported by your browser.");
         return;
     }
 
     navigator.geolocation.getCurrentPosition(
-        function (position) {
-            let latitude = position.coords.latitude;
-            let longitude = position.coords.longitude;
-
-            console.log("Latitude:", latitude);
-            console.log("Longitude:", longitude);
-
-            if (isNaN(latitude) || isNaN(longitude)) {
-                alert("⚠ Invalid coordinates received.");
-                return;
-            }
-
-            let apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`;
-
-            fetch(apiUrl)
-                .then(response => response.json())
+        position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+                .then(res => res.json())
                 .then(data => {
-                    console.log("Nominatim Response:", data); // Log full response
+                    const addr = data.address || {};
+                    const barangay = addr.neighbourhood || addr.suburb || addr.village || addr.hamlet || "Not Found";
+                    const city = addr.city || addr.town || addr.municipality || "Not Found";
 
-                    if (data.address) {
-                        // More detailed address hierarchy
-                        let barangay = data.address.neighbourhood || data.address.suburb || 
-                                       data.address.village || data.address.hamlet || "Not Found";
+                    $("#barangay").val(barangay);
+                    $("#city").val(city);
 
-                        let city = data.address.city || data.address.town || 
-                                   data.address.municipality || "Not Found";
-
-                        // Use jQuery if elements exist
-                        if ($("#barangay").length) $("#barangay").val(barangay);
-                        if ($("#city").length) $("#city").val(city);
-
-                        console.log("Barangay:", barangay);
-                        console.log("City:", city);
-                    } else {
-                        console.log("⚠ Address data not found.");
-                        if ($("#barangay").length) $("#barangay").val("Not Found");
-                        if ($("#city").length) $("#city").val("Not Found");
-                    }
+                    console.log("Prefilled location - Barangay:", barangay, "City:", city);
                 })
-                .catch(error => {
-                    console.log("Error fetching location data:", error);
-                    if ($("#barangay").length) $("#barangay").val("Not Found");
-                    if ($("#city").length) $("#city").val("Not Found");
-                });
+                .catch(err => console.error("Error fetching location data:", err));
         },
-        function (error) {
-            let errorMsg;
-            switch (error.code) {
-                case 1:
-                    errorMsg = "⚠ Location access denied by user.";
-                    break;
-                case 2:
-                    errorMsg = "⚠ Unable to retrieve your location.";
-                    break;
-                case 3:
-                    errorMsg = "⚠ The request to get user location timed out.";
-                    break;
-                default:
-                    errorMsg = "⚠ An unknown error occurred while retrieving your location.";
-            }
-            alert(errorMsg);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 } // Increased timeout for better accuracy
+        err => console.warn("Location fetch error:", err),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
 }
 
-$(document).ready(function () {
-    getLocation();
+// Login function
+async function loginUser() {
+    const studentNumber = $("#studentNumber").val().trim();
+    const lastName = $("#lastName").val().trim();
+    const firstName = $("#firstName").val().trim();
+    const course = $("#course").val();
+    const selectedTime = $("#loginTime").val();
+
+    if (!studentNumber || !lastName || !firstName || !course || !selectedTime) {
+        alert("⚠ Please fill in all required fields!");
+        return;
+    }
+
+    const allowed = await isWithinAllowedTime(selectedTime);
+    if (!allowed) {
+        alert("⚠ You can only log in during the allowed time slot!");
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const deviceID = getDeviceID();
+
+        if (await checkDuplicateLogin(studentNumber, selectedTime)) {
+            alert("⚠ You have already logged in for this time slot.");
+            hideLoading();
+            return;
+        }
+
+        if (!await checkDeviceUsage(studentNumber, deviceID)) {
+            alert("⚠ Use your own device to log in.");
+            hideLoading();
+            return;
+        }
+
+        // Get precise location
+        const locationData = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) return reject("⚠ Geolocation not supported.");
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const addr = data.address || {};
+                            const barangay = addr.neighbourhood || addr.suburb || addr.village || addr.hamlet || "Not Found";
+                            const city = addr.city || addr.town || addr.municipality || "Not Found";
+
+                            $("#barangay").val(barangay);
+                            $("#city").val(city);
+
+                            resolve({ latitude: lat, longitude: lon, barangay, city });
+                        })
+                        .catch(err => reject("⚠ Error fetching location data: " + err));
+                },
+                err => reject("⚠ Location error: " + err.message),
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        });
+
+        await addDoc(collection(db, "student_attendance"), {
+            studentNumber,
+            lastName,
+            firstName,
+            course,
+            selectedTime,
+            barangay: locationData.barangay,
+            city: locationData.city,
+            deviceID,
+            latitude: locationData.latitude,
+            longitude: locationData.longitude,
+            timestamp: serverTimestamp()
+        });
+
+        alert("✅ Login recorded successfully!");
+        $("#studentNumber, #lastName, #firstName").val("");
+        $("#course, #loginTime").prop("selectedIndex", 0);
+        $("#barangay, #city").val("");
+
+    } catch (error) {
+        console.error("Error saving data:", error);
+        alert(error || "⚠ Error saving data. Please try again.");
+    } finally {
+        hideLoading();
+    }
+}
+
+// DOM Ready
+$(document).ready(() => {
+    prefillLocation();
+    loadLoginTimes();
     $("#loginBtn").click(loginUser);
 });
 
-  
-        document.addEventListener("DOMContentLoaded", function () {
-            const modal = document.getElementById("instructionModal");
-            const closeModal = document.getElementById("closeModal");
-
-            // Show the modal when the page loads
-            modal.style.display = "flex";
-
-            // Close the modal when clicking the button
-            closeModal.addEventListener("click", function () {
-                modal.style.display = "none";
-            });
-        });
-    </script>
+// Instructions modal
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("instructionModal");
+    document.getElementById("closeModal").addEventListener("click", () => modal.style.display = "none");
+    modal.style.display = "flex";
+});
+</script>
 
 </body>
 </html>
