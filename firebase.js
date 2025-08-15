@@ -1,7 +1,9 @@
 // Import Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { 
-    getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp 
+    getFirestore, 
+    collection, addDoc, getDocs, query, where, serverTimestamp,
+    doc, setDoc, getDoc // ✅ Import these
 } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
 
 // Your Firebase configuration
@@ -17,7 +19,10 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app); // ✅ Export Firestore instance
+export const db = getFirestore(app); // ✅ Firestore instance
 
-// ✅ Export Firestore functions including `query` and `where`
-export { collection, addDoc, getDocs, query, where, serverTimestamp };
+// ✅ Export everything needed
+export { 
+    collection, addDoc, getDocs, query, where, serverTimestamp,
+    doc, setDoc, getDoc
+};
