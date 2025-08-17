@@ -8,13 +8,13 @@ import {
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
+ apiKey: "AIzaSyAcc-F0PpwXi6NHmT3SksGt3OP8ndCj0Q4",
+    authDomain: "student-attendance-d8783.firebaseapp.com",
+    projectId: "student-attendance-d8783",
+    storageBucket: "student-attendance-d8783.appspot.com",
+    messagingSenderId: "333475760180",
+    appId: "1:333475760180:web:037e78b53017ce61f0e261",
+    measurementId: "G-W10W0B6SG7"
 };
 
 
@@ -27,4 +27,5 @@ export {
     collection, addDoc, getDocs, query, where, serverTimestamp,
     doc, setDoc, getDoc
 };
+
 
