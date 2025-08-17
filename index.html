@@ -244,7 +244,7 @@ document.onkeydown = e => {
 
 
 <footer class="footer">
-    Powered by: <span class="faculty-name">vB Version 1120.21</span>
+    Powered by: <span class="faculty-name">VBadua ECT FACULTY</span>
 </footer>
 
 <script type="module" src="firebase.js"></script>
@@ -360,31 +360,54 @@ function applyLockUI(lockUntil) {
 async function loadLoginTimes() {
     const dropdown = $("#loginTime");
     dropdown.empty().append(`<option value="">Select Login Time</option>`);
+
     try {
         const settingsDocRef = doc(db, "settings", "attendanceWindows");
         const snapshot = await getDoc(settingsDocRef);
+
         if (snapshot.exists()) {
             const data = snapshot.data();
             if (Array.isArray(data.slots)) {
                 const now = new Date();
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
                 data.slots.forEach(slot => {
-                    if (slot.start && slot.end && slot.title) {
-                        const label = `${slot.title} (${slot.start} - ${slot.end})`;
+                    if (slot.date && slot.start && slot.end) {
+                        // ✅ Format date → AUGUST 17, 2025
+                        const dateObj = new Date(slot.date);
+                        const options = { year: "numeric", month: "long", day: "numeric" };
+                        const formattedDate = dateObj.toLocaleDateString("en-US", options).toUpperCase();
+
+                        // ✅ Convert 24h → 12h AM/PM
+                        function to12h(time) {
+                            const [h, m] = time.split(":").map(Number);
+                            let hour = h % 12 || 12;
+                            let ampm = h >= 12 ? "PM" : "AM";
+                            return `${hour}:${m.toString().padStart(2, "0")}${ampm}`;
+                        }
+
+                        const startFormatted = to12h(slot.start);
+                        const endFormatted = to12h(slot.end);
+
+                        // ✅ Final Label → AUGUST 17, 2025 (11:18PM - 12:18PM)
+                        const label = `${formattedDate} (${startFormatted} - ${endFormatted})`;
+
+                        // ✅ Status check
+                        const nowMinutes = now.getHours() * 60 + now.getMinutes();
                         const [sh, sm] = slot.start.split(":").map(Number);
                         const [eh, em] = slot.end.split(":").map(Number);
                         const startM = sh * 60 + sm;
                         const endM = eh * 60 + em;
 
                         let statusClass = "expired";
-                        if (currentMinutes >= startM && currentMinutes <= endM) {
+                        if (nowMinutes >= startM && nowMinutes <= endM) {
                             statusClass = "active";
-                        } else if (currentMinutes < startM) {
+                        } else if (nowMinutes < startM) {
                             statusClass = "";
                         }
 
-                        dropdown.append(`<option value="${slot.start}" class="${statusClass}">${label}</option>`);
+                        dropdown.append(
+                            `<option value="${slot.start}" class="${statusClass}">${label}</option>`
+                        );
                     }
                 });
             }
@@ -395,6 +418,7 @@ async function loadLoginTimes() {
         console.error("Error loading login times:", error);
     }
 }
+
 
 // Check if current time is within allowed slot
 async function isWithinAllowedTime(selectedTime) {
@@ -648,4 +672,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
