@@ -62,10 +62,89 @@
         }
         .btn-primary { background: #2e6bff; color: #fff; }
         .btn-plain { background: #eee; color: #222; }
-        /* ==== ALTERED END ==== */
+   
+ /* Loader overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9); /* semi-transparent background */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    z-index: 9999;
+}
+
+/* When active (JS will add this class) */
+.loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Rotating logo */
+.loader-img {
+    width: 70px;
+    height: 70px;
+    animation: spin 2s linear infinite;
+    margin-bottom: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Text pulse */
+#loading p {
+    animation: pulse 1.5s infinite;
+    font-weight: bold;
+    color: #2e6bff;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+
     </style>
 </head>
 <body>
+
+<script>
+// Disable right-click
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+// Disable common DevTools shortcuts
+document.onkeydown = e => {
+    if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
+        (e.ctrlKey && e.keyCode === 85) // Ctrl+U (View Source)
+    ) {
+        e.preventDefault();
+        return false;
+    }
+};
+
+// Detect if DevTools is open
+(function() {
+    let devtools = function() {};
+    devtools.toString = function() {
+        alert("⚠ Developer tools are disabled on this system.");
+        return "";
+    };
+    console.log("%c", devtools);
+})();
+</script>
 
 <!-- Modal -->
 <div id="instructionModal" class="modal">
@@ -149,10 +228,12 @@
     <button id="loginBtn">Login</button>
 </div>
 
-<div id="loading" style="display: none;">
-    <div class="loader"></div>
+<div id="loading" class="loading-overlay">
+    <img src="loading.png" alt="Loading..." class="loader-img">
     <p>Processing...</p>
 </div>
+
+
 
 <footer class="footer">
     Powered by: <span class="faculty-name">VBadua ECT FACULTY</span>
@@ -177,6 +258,16 @@ function getDeviceID() {
     }
     return deviceID;
 }
+
+
+function showLoader() {
+    document.getElementById("loading").classList.add("active");
+}
+
+function hideLoader() {
+    document.getElementById("loading").classList.remove("active");
+}
+
 
 // ==== ALTERED START: date helpers & constants (lock feature) ====
 const LOCK_MINUTES = 30;
