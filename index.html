@@ -6,6 +6,64 @@
     <title>Student Attendance System</title>
     <link rel="stylesheet" href="new_style.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Symbol styling */
+        .status-symbol {
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        option.done::after {
+            content: " ✅";
+        }
+        option.active::after {
+            content: " ⏳";
+        }
+        option.expired::after {
+            content: " ❌";
+        }
+        .disabled-input {
+            background-color: #eee;
+            pointer-events: none;
+        }
+
+        /* ==== ALTERED START: message modal basic styles (reuse your modal classes) ==== */
+        .modal {
+            display: none; /* default hidden */
+            position: fixed;
+            z-index: 10000;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            max-width: 520px;
+            width: 100%;
+            padding: 20px 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 {
+            margin: 0 0 8px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .btn {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn-primary { background: #2e6bff; color: #fff; }
+        .btn-plain { background: #eee; color: #222; }
+        /* ==== ALTERED END ==== */
+    </style>
 </head>
 <body>
 
@@ -22,9 +80,21 @@
             <li><strong>Click "Login":</strong> Press the <em>Login</em> button to submit your attendance.</li>
         </ol>
         <p><strong>⚠ Important:</strong> You can only log in during the allowed time slots. Multiple logins may be restricted.</p>
-        <button id="closeModal">Got It!</button>
+        <button id="closeModal" class="btn btn-primary">Got It!</button>
     </div>
 </div>
+
+<!-- ==== ALTERED START: message modal container ==== -->
+<div id="messageModal" class="modal">
+    <div class="modal-content">
+        <h3 id="messageTitle">Notice</h3>
+        <div id="messageBody">...</div>
+        <div class="modal-actions">
+            <button id="messageClose" class="btn btn-primary">OK</button>
+        </div>
+    </div>
+</div>
+<!-- ==== ALTERED END ==== -->
 
 <div class="logo">
     <img src="LOGO.jpg" alt="Logo">
@@ -108,6 +178,85 @@ function getDeviceID() {
     return deviceID;
 }
 
+// ==== ALTERED START: date helpers & constants (lock feature) ====
+const LOCK_MINUTES = 30;
+const LOCK_KEY = "attendanceLockUntil";
+
+function todayISO() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function getLockUntil() {
+    const v = parseInt(localStorage.getItem(LOCK_KEY) || "0", 10);
+    return Number.isFinite(v) ? v : 0;
+}
+function setLock(minutes = LOCK_MINUTES) {
+    const until = Date.now() + minutes * 60 * 1000;
+    localStorage.setItem(LOCK_KEY, String(until));
+    return until;
+}
+function clearLock() {
+    localStorage.removeItem(LOCK_KEY);
+}
+// ==== ALTERED END ====
+
+// ==== ALTERED START: message modal utilities ====
+function showMessageModal(title, htmlMessage) {
+    $("#messageTitle").text(title || "Notice");
+    $("#messageBody").html(htmlMessage || "");
+    const $m = $("#messageModal");
+    $m.css("display","flex");
+    return new Promise(resolve => {
+        const close = () => { 
+            $m.hide(); 
+            $("#messageClose").off("click", close);
+            $m.off("click", overlayClose);
+            resolve();
+        };
+        const overlayClose = (e) => { if (e.target.id === "messageModal") close(); }
+        $("#messageClose").on("click", close);
+        $m.on("click", overlayClose);
+    });
+}
+// ==== ALTERED END ====
+
+// ==== ALTERED START: UI lock & countdown handling ====
+let lockTimer = null;
+
+function setInputsDisabled(disabled) {
+    $("#studentNumber, #lastName, #firstName, #course, #loginTime, #loginBtn")
+        .prop("disabled", disabled)
+        .toggleClass("disabled-input", disabled);
+}
+
+function applyLockUI(lockUntil) {
+    if (lockTimer) { clearInterval(lockTimer); lockTimer = null; }
+    const $btn = $("#loginBtn");
+    const update = () => {
+        const now = Date.now();
+        if (now >= lockUntil) {
+            clearInterval(lockTimer);
+            lockTimer = null;
+            setInputsDisabled(false);
+            $btn.text("Login");
+            clearLock();
+            return;
+        }
+        setInputsDisabled(true);
+        const remaining = Math.max(0, Math.floor((lockUntil - now)/1000));
+        const mm = String(Math.floor(remaining/60)).padStart(2,"0");
+        const ss = String(remaining%60).padStart(2,"0");
+        $btn.text(`Locked ${mm}:${ss}`);
+    };
+    update();
+    lockTimer = setInterval(update, 1000);
+}
+// ==== ALTERED END ====
+
 // Load login times into dropdown
 async function loadLoginTimes() {
     const dropdown = $("#loginTime");
@@ -118,10 +267,25 @@ async function loadLoginTimes() {
         if (snapshot.exists()) {
             const data = snapshot.data();
             if (Array.isArray(data.slots)) {
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
                 data.slots.forEach(slot => {
-                    if (slot.start && slot.end) {
-                        const label = `${slot.start} - ${slot.end}`;
-                        dropdown.append(`<option value="${slot.start}">${label}</option>`);
+                    if (slot.start && slot.end && slot.title) {
+                        const label = `${slot.title} (${slot.start} - ${slot.end})`;
+                        const [sh, sm] = slot.start.split(":").map(Number);
+                        const [eh, em] = slot.end.split(":").map(Number);
+                        const startM = sh * 60 + sm;
+                        const endM = eh * 60 + em;
+
+                        let statusClass = "expired";
+                        if (currentMinutes >= startM && currentMinutes <= endM) {
+                            statusClass = "active";
+                        } else if (currentMinutes < startM) {
+                            statusClass = "";
+                        }
+
+                        dropdown.append(`<option value="${slot.start}" class="${statusClass}">${label}</option>`);
                     }
                 });
             }
@@ -166,26 +330,46 @@ async function isWithinAllowedTime(selectedTime) {
     return false;
 }
 
-// Check if student already logged in for this time
-async function checkDuplicateLogin(studentNumber, selectedTime) {
-    const q = query(
+// ==== ALTERED START: include date in duplicate and device bindings ====
+// Check if student already logged in for this time TODAY
+async function checkDuplicateLogin(studentNumber, selectedTime, attendanceDate) {
+    const qy = query(
         collection(db, "student_attendance"),
         where("studentNumber", "==", studentNumber),
-        where("selectedTime", "==", selectedTime)
+        where("selectedTime", "==", selectedTime),
+        where("attendanceDate", "==", attendanceDate)
     );
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(qy);
     return !snapshot.empty;
 }
 
-// Check if device is unique for the student
+// Enforce one-user-per-device (bind device to first user who used it)
+async function checkDeviceBinding(studentNumber, deviceID) {
+    const qy = query(
+        collection(db, "student_attendance"),
+        where("deviceID", "==", deviceID)
+    );
+    const snapshot = await getDocs(qy);
+    // If device has previous records and any belong to another student, block
+    for (const d of snapshot.docs) {
+        const rec = d.data();
+        if (rec.studentNumber && rec.studentNumber !== studentNumber) {
+            return { ok:false, boundTo: rec.studentNumber };
+        }
+    }
+    return { ok:true };
+}
+
+// (kept) Check if the same student is switching devices (disallow)
 async function checkDeviceUsage(studentNumber, deviceID) {
-    const q = query(collection(db, "student_attendance"), where("studentNumber", "==", studentNumber));
-    const snapshot = await getDocs(q);
-    for (const doc of snapshot.docs) {
-        if (doc.data().deviceID !== deviceID) return false;
+    const qy = query(collection(db, "student_attendance"), where("studentNumber", "==", studentNumber));
+    const snapshot = await getDocs(qy);
+    for (const d of snapshot.docs) {
+        if (d.data().deviceID && d.data().deviceID !== deviceID) return false;
     }
     return true;
 }
+// ==== ALTERED END ====
 
 // Prefill location on page load
 function prefillLocation() {
@@ -207,8 +391,6 @@ function prefillLocation() {
 
                     $("#barangay").val(barangay);
                     $("#city").val(city);
-
-                    console.log("Prefilled location - Barangay:", barangay, "City:", city);
                 })
                 .catch(err => console.error("Error fetching location data:", err));
         },
@@ -217,22 +399,33 @@ function prefillLocation() {
     );
 }
 
-// Login function
+// ==== ALTERED START: central login with modals + lock ====
 async function loginUser() {
     const studentNumber = $("#studentNumber").val().trim();
     const lastName = $("#lastName").val().trim();
     const firstName = $("#firstName").val().trim();
     const course = $("#course").val();
     const selectedTime = $("#loginTime").val();
+    const attendanceDate = todayISO();
+
+    // Check active lock
+    const lockUntil = getLockUntil();
+    if (Date.now() < lockUntil) {
+        const minutesLeft = Math.ceil((lockUntil - Date.now())/60000);
+        await showMessageModal("⛔ Attendance Locked",
+            `<p>Your device is temporarily locked for attendance.<br><strong>Time remaining:</strong> about ${minutesLeft} minute(s).</p>`);
+        applyLockUI(lockUntil);
+        return;
+    }
 
     if (!studentNumber || !lastName || !firstName || !course || !selectedTime) {
-        alert("⚠ Please fill in all required fields!");
+        await showMessageModal("⚠ Missing Information", "Please fill in all required fields.");
         return;
     }
 
     const allowed = await isWithinAllowedTime(selectedTime);
     if (!allowed) {
-        alert("⚠ You can only log in during the allowed time slot!");
+        await showMessageModal("⏳ Outside Time Window", "You can only log in during the allowed time slot.");
         return;
     }
 
@@ -241,15 +434,29 @@ async function loginUser() {
     try {
         const deviceID = getDeviceID();
 
-        if (await checkDuplicateLogin(studentNumber, selectedTime)) {
-            alert("⚠ You have already logged in for this time slot.");
+        // One-user-per-device enforcement
+        const binding = await checkDeviceBinding(studentNumber, deviceID);
+        if (!binding.ok) {
             hideLoading();
+            await showMessageModal("🔒 Device Already In Use",
+                `<p>This device is already bound to a different student number: <strong>${binding.boundTo}</strong>.</p>
+                 <p>Please use your own device.</p>`);
             return;
         }
 
+        // Prevent same student from switching devices
         if (!await checkDeviceUsage(studentNumber, deviceID)) {
-            alert("⚠ Use your own device to log in.");
             hideLoading();
+            await showMessageModal("⚠ Device Mismatch",
+                "<p>Please use the same device you originally used for attendance.</p>");
+            return;
+        }
+
+        // Duplicate login (same student, same slot, same day)
+        if (await checkDuplicateLogin(studentNumber, selectedTime, attendanceDate)) {
+            hideLoading();
+            await showMessageModal("✅ Already Recorded",
+                "<p>You already have attendance for this time slot today.</p>");
             return;
         }
 
@@ -281,38 +488,55 @@ async function loginUser() {
             );
         });
 
+        // Save attendance with date and device binding fields
         await addDoc(collection(db, "student_attendance"), {
             studentNumber,
             lastName,
             firstName,
             course,
             selectedTime,
+            attendanceDate, // <— NEW: record the day
             barangay: locationData.barangay,
             city: locationData.city,
-            deviceID,
+            deviceID, // <— ensure device ID is stored
             latitude: locationData.latitude,
             longitude: locationData.longitude,
             timestamp: serverTimestamp()
         });
 
-        alert("✅ Login recorded successfully!");
-        $("#studentNumber, #lastName, #firstName").val("");
-        $("#course, #loginTime").prop("selectedIndex", 0);
-        $("#barangay, #city").val("");
+        // Success modal + 30-minute lock
+        const until = setLock(LOCK_MINUTES);
+        await showMessageModal("🎉 Attendance Recorded",
+            `<p>Your attendance has been successfully recorded.</p>
+             <p><strong>Note:</strong> Attendance is disabled on this device for the next <strong>${LOCK_MINUTES} minutes</strong>.</p>`);
+
+        // Disable inputs and show countdown
+        applyLockUI(until);
 
     } catch (error) {
         console.error("Error saving data:", error);
-        alert(error || "⚠ Error saving data. Please try again.");
+        await showMessageModal("⚠ Error", (""+error) || "Error saving data. Please try again.");
     } finally {
         hideLoading();
     }
 }
+// ==== ALTERED END ====
+
 
 // DOM Ready
 $(document).ready(() => {
     prefillLocation();
     loadLoginTimes();
     $("#loginBtn").click(loginUser);
+
+    // ==== ALTERED START: restore lock state on load ====
+    const lockUntil = getLockUntil();
+    if (Date.now() < lockUntil) {
+        showMessageModal("⛔ Attendance Locked",
+            "<p>Your device is currently locked due to a recent attendance submission.</p>");
+        applyLockUI(lockUntil);
+    }
+    // ==== ALTERED END ====
 });
 
 // Instructions modal
@@ -325,3 +549,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
