@@ -646,21 +646,50 @@ async function loginUser() {
 // ==== ALTERED END ====
 
 
-// DOM Ready
+let isProcessing = false;
+function setProcessing(on) {
+    isProcessing = on;
+    const $btn = $("#loginBtn");
+    if (on) {
+        $btn.prop("disabled", true)
+            .addClass("disabled-input")
+            .data("orig-text", $btn.text())
+            .text("Processing…");
+    } else {
+        const lockUntil = getLockUntil();
+        if (Date.now() >= lockUntil) {
+            $btn.prop("disabled", false)
+                .removeClass("disabled-input")
+                .text($btn.data("orig-text") || "Login");
+        }
+    }
+}
+async function guardedLogin() {
+    if (isProcessing) return;
+    setProcessing(true);
+    try { await loginUser(); }
+    finally { setProcessing(false); }
+}
+
+/* ---------------- DOM READY ---------------- */
 $(document).ready(() => {
     prefillLocation();
     loadLoginTimes();
-    $("#loginBtn").click(loginUser);
+    $("#loginBtn").off("click").on("click", guardedLogin);
 
-    // ==== ALTERED START: restore lock state on load ====
+    // Enter key triggers login
+    $(document).on("keydown", (e) => {
+        if (e.key === "Enter") $("#loginBtn").trigger("click");
+    });
+
     const lockUntil = getLockUntil();
     if (Date.now() < lockUntil) {
         showMessageModal("⛔ Attendance Locked",
             "<p>Your device is currently locked due to a recent attendance submission.</p>");
         applyLockUI(lockUntil);
     }
-    // ==== ALTERED END ====
 });
+
 
 // Instructions modal
 document.addEventListener("DOMContentLoaded", () => {
