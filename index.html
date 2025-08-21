@@ -136,6 +136,14 @@ document.onkeydown = e => {
         return false;
     }
 };
+// Prevent the user from inspecting elements in the console
+window.onresize = function () {
+    if (window.outerWidth > 800 || window.outerHeight > 600) {
+        // If window is resized to bigger size, disable the whole page
+        document.body.style.display = "none";
+    }
+    console.clear(); // Clear console logs
+};
 
 // Detect if DevTools is open
 (function() {
@@ -146,13 +154,15 @@ document.onkeydown = e => {
     };
     console.log("%c", devtools);
 })();
+// Call the function when page loads
+window.onload = blockDeveloperTools;
 </script>
 
 <!-- Modal -->
 <div id="instructionModal" class="modal">
     <div class="modal-content">
   <h2>📌 Quick Instructions</h2>
-  <p>Welcome to the <strong>ECT Student Attendance System</strong>. Follow these simple steps:</p>
+  <p>Welcome to the <strong>Student Attendance System</strong>. Follow these simple steps:</p>
 
   <ol>
     <li><strong>Enter Details:</strong> Type your <em>Student Number</em>, <em>First Name</em>, and <em>Last Name</em> correctly.</li>
@@ -272,7 +282,7 @@ document.onkeydown = e => {
 
 
 <footer class="footer">
-    Powered by: <span class="faculty-name">vbDavinci 110.21.9</span>
+    Powered by: <span class="faculty-name">VBadua ECT FACULTY</span>
 </footer>
 
 <script type="module" src="firebase.js"></script>
