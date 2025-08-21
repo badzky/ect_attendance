@@ -151,17 +151,33 @@ document.onkeydown = e => {
 <!-- Modal -->
 <div id="instructionModal" class="modal">
     <div class="modal-content">
-        <h2>📌 Instructions</h2>
-        <p>Welcome to the <strong>Student Attendance System</strong>. Please follow these steps carefully:</p>
-        <ol>
-            <li><strong>Enter your details:</strong> Provide your <em>Student Number</em>, <em>First Name</em>, and <em>Last Name</em> correctly.</li>
-            <li><strong>Select your course:</strong> Choose your <em>Course</em> from the dropdown menu.</li>
-            <li><strong>Pick your login time:</strong> Select the <em>designated time slot</em> for attendance.</li>
-            <li><strong>Enable location services:</strong> Ensure your <em>GPS is turned on</em> for verification.</li>
-            <li><strong>Click "Login":</strong> Press the <em>Login</em> button to submit your attendance.</li>
-        </ol>
-        <p><strong>⚠ Important:</strong> You can only log in during the allowed time slots. Multiple logins may be restricted.</p>
-        <button id="closeModal" class="btn btn-primary">Got It!</button>
+  <h2>📌 Quick Instructions</h2>
+  <p>Welcome to the <strong>ECT Student Attendance System</strong>. Follow these simple steps:</p>
+
+  <ol>
+    <li><strong>Enter Details:</strong> Type your <em>Student Number</em>, <em>First Name</em>, and <em>Last Name</em> correctly.</li>
+    <li><strong>Select Course:</strong> Choose from the dropdown list.</li>
+    <li><strong>Pick Time:</strong> Select your <em>assigned login slot</em>.</li>
+    <li><strong>Turn On GPS:</strong> Enable location services for verification.</li>
+    <li><strong>Review Before Submit:</strong> Double-check all your details before clicking submit.</li>
+    <li><strong>Login:</strong> Click <em>"Login"</em> to record your attendance.</li>
+  </ol>
+
+  <p><strong>⚠ Reminders:</strong></p>
+  <ul>
+   ✅ <em>One phone, one user policy</em> — do not share devices.
+    <ul style="color:red; font-weight:bold;">
+      ⏳ Once you log attendance for a specific slot, the system will be <u>locked for 30 minutes</u>.
+    </ul>
+    <ul>✅ Attendance works only within allowed time slots. Multiple logins may be blocked.</ul>
+  </ul>
+
+  <div class="modal-actions">
+    <button id="closeModal" class="btn btn-primary">Got It!</button>
+  </div>
+</div>
+
+
     </div>
 </div>
 
@@ -184,7 +200,19 @@ document.onkeydown = e => {
 <div class="container">
     <h2>Student Attendance System</h2>
 
-    <input type="text" id="studentNumber" placeholder="Student Number" required>
+<input type="text" 
+       id="studentNumber" 
+       placeholder="Student Number" 
+       required 
+       maxlength="10" 
+       pattern="\d{10}" 
+       title="Student Number must be exactly 10 digits"
+       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+       onpaste="return false"
+       oncontextmenu="return false">
+
+
+
     <input type="text" id="lastName" placeholder="Last Name" required>
     <input type="text" id="firstName" placeholder="First Name" required>
 
@@ -244,7 +272,7 @@ document.onkeydown = e => {
 
 
 <footer class="footer">
-    Powered by: <span class="faculty-name">VBadua ECT FACULTY</span>
+    Powered by: <span class="faculty-name">vbDavinci 110.21.9</span>
 </footer>
 
 <script type="module" src="firebase.js"></script>
@@ -545,7 +573,11 @@ async function loginUser() {
         await showMessageModal("⚠ Missing Information", "Please fill in all required fields.");
         return;
     }
-
+// 🔒 Validate Student Number (exactly 10 digits)
+if (!/^\d{10}$/.test(studentNumber)) {
+    await showMessageModal("⚠ Invalid Student Number", "Student Number must be exactly 10 digits.");
+    return;
+}
     const allowed = await isWithinAllowedTime(selectedTime);
     if (!allowed) {
         await showMessageModal("⏳ Outside Time Window", "You can only log in during the allowed time slot.");
